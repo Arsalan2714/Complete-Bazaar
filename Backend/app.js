@@ -21,7 +21,23 @@ const MONGO_DB_URL = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.e
 const app = express();
 
 // Middleware
-app.use(cors());
+// CORS — allow local dev and any Vercel deployment
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  /\.vercel\.app$/,          // matches any *.vercel.app domain
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow requests with no origin (e.g. Postman, mobile) or matched origins
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some((o) =>
+      typeof o === "string" ? o === origin : o.test(origin)
+    );
+    callback(allowed ? null : new Error("CORS blocked"), allowed);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
