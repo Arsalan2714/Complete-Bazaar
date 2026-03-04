@@ -3,29 +3,51 @@ const bcrypt = require("bcrypt");
 const { firstNameValidator, lastNameValidator, emailValidator, passwordValidator, confirmPasswordValidator, userTypeValidator } = require("./validation");
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
 
 // In-memory OTP store: key -> { otp, expiresAt, data? }
 const otpStore = new Map();
 
-// Email transporter
+// Email transporter (Gmail - commented out)
 // const transporter = nodemailer.createTransport({
 //   service: "gmail",
 //   auth: {
 //     user: process.env.EMAIL_USER,
 //     pass: process.env.EMAIL_PASS,
 //   },
-//});
+// });
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_USER, // your Brevo login email
-    pass: process.env.BREVO_PASS, // your Brevo SMTP key
-  },
-});
+// Email transporter (Brevo SMTP - commented out, blocked on Render free tier)
+// const transporter = nodemailer.createTransport({
+//   host: "smtp-relay.brevo.com",
+//   port: 587,
+//   secure: false,
+//   auth: {
+//     user: process.env.BREVO_USER,
+//     pass: process.env.BREVO_PASS,
+//   },
+// });
+
+// Brevo API email sender (uses HTTPS port 443 - works on Render free tier)
+const sendBrevoEmail = async (to, subject, html) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: "Complete Bazaar", email: process.env.BREVO_USER },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || "Failed to send email");
+  }
+};
 
 // Helper: Generate and send OTP email
 const generateAndSendOtp = async (email, firstName, purpose) => {
@@ -47,26 +69,23 @@ const generateAndSendOtp = async (email, firstName, purpose) => {
     reset: "Use the OTP below to reset your password:",
   };
 
-  await transporter.sendMail({
-    from: `"Complete Bazaar" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: subjects[purpose],
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 30px; background: #1e293b; border-radius: 16px; color: #e2e8f0;">
-        <h2 style="color: #818cf8; margin-bottom: 20px;">${headings[purpose]}</h2>
-        <p>Hi <strong>${firstName}</strong>,</p>
-        <p>${messages[purpose]}</p>
-        <div style="text-align: center; margin: 25px 0;">
-          <span style="display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #818cf8; background: #334155; padding: 15px 30px; border-radius: 12px; border: 1px solid #475569;">
-            ${otp}
-          </span>
-        </div>
-        <p style="color: #94a3b8; font-size: 14px;">This OTP is valid for <strong>5 minutes</strong>. If you didn't request this, please ignore this email.</p>
-        <hr style="border-color: #334155; margin: 20px 0;" />
-        <p style="color: #64748b; font-size: 12px;">— Complete Bazaar Team</p>
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 30px; background: #1e293b; border-radius: 16px; color: #e2e8f0;">
+      <h2 style="color: #818cf8; margin-bottom: 20px;">${headings[purpose]}</h2>
+      <p>Hi <strong>${firstName}</strong>,</p>
+      <p>${messages[purpose]}</p>
+      <div style="text-align: center; margin: 25px 0;">
+        <span style="display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #818cf8; background: #334155; padding: 15px 30px; border-radius: 12px; border: 1px solid #475569;">
+          ${otp}
+        </span>
       </div>
-    `,
-  });
+      <p style="color: #94a3b8; font-size: 14px;">This OTP is valid for <strong>5 minutes</strong>. If you didn't request this, please ignore this email.</p>
+      <hr style="border-color: #334155; margin: 20px 0;" />
+      <p style="color: #64748b; font-size: 12px;">— Complete Bazaar Team</p>
+    </div>
+  `;
+
+  await sendBrevoEmail(email, subjects[purpose], html);
 
   return otp;
 };
