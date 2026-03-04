@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { Link } from "react-router-dom";
 
 const CustomerProduct = ({ product, cart, wishlist, handleAddToCart, handleRemoveFromCart, handleToggleWishlist }) => {
@@ -29,7 +30,7 @@ const CustomerProduct = ({ product, cart, wishlist, handleAddToCart, handleRemov
                 {/* Product Image */}
                 <div className="relative h-52 bg-slate-700/50 overflow-hidden flex-shrink-0">
                     <img
-                        src={`http://localhost:3001/${product.imageUrl}`}
+                        src={`${API_URL}/${product.imageUrl}`}
                         alt={product.name}
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />

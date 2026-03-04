@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -30,7 +31,7 @@ const ProductDetails = () => {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const res = await fetch(`http://localhost:3001/api/products/${id}`);
+                const res = await fetch(`${API_URL}/api/products/${id}`);
                 const data = await res.json();
                 if (res.ok) {
                     setProduct(data.product);
@@ -50,7 +51,7 @@ const ProductDetails = () => {
         if (!product) return;
         const fetchRelated = async () => {
             try {
-                const res = await fetch("http://localhost:3001/api/products");
+                const res = await fetch(`${API_URL}/api/products`);
                 const data = await res.json();
                 if (res.ok) {
                     const related = data.products
@@ -67,7 +68,7 @@ const ProductDetails = () => {
     useEffect(() => {
         const fetchReviews = async () => {
             try {
-                const res = await fetch(`http://localhost:3001/api/reviews/${id}`);
+                const res = await fetch(`${API_URL}/api/reviews/${id}`);
                 const data = await res.json();
                 if (res.ok) {
                     setReviews(data.reviews);
@@ -189,7 +190,7 @@ const ProductDetails = () => {
                         <div className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden sticky top-24">
                             <div className="aspect-square bg-slate-700/30 flex items-center justify-center p-4">
                                 <img
-                                    src={`http://localhost:3001/${product.imageUrl}`}
+                                    src={`${API_URL}/${product.imageUrl}`}
                                     alt={product.name}
                                     className="max-w-full max-h-full object-contain"
                                 />
@@ -547,7 +548,7 @@ const ProductDetails = () => {
                                     setReviewError("");
                                     setSubmittingReview(true);
                                     try {
-                                        const res = await fetch(`http://localhost:3001/api/customer/review/${id}`, {
+                                        const res = await fetch(`${API_URL}/api/customer/review/${id}`, {
                                             method: "POST",
                                             headers: {
                                                 Authorization: `Bearer ${token}`,
@@ -647,7 +648,7 @@ const ProductDetails = () => {
                                 >
                                     <div className="h-40 bg-slate-700/30 overflow-hidden">
                                         <img
-                                            src={`http://localhost:3001/${rp.imageUrl}`}
+                                            src={`${API_URL}/${rp.imageUrl}`}
                                             alt={rp.name}
                                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                                         />

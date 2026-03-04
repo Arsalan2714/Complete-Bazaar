@@ -49,6 +49,10 @@ app.get("/api/products", async (req, res) => {
   res.status(200).json({ products });
 });
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is healthy and reachable" });
+});
+
 app.get("/api/products/:id", async (req, res) => {
   try {
     const Product = require("./models/Product.js");

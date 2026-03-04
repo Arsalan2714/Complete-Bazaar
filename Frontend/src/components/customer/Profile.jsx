@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
@@ -163,7 +164,7 @@ const Profile = () => {
         if (!token) return;
         const fetchProfile = async () => {
             try {
-                const res = await fetch("http://localhost:3001/api/customer/profile", {
+                const res = await fetch(`${API_URL}/api/customer/profile`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
@@ -181,7 +182,7 @@ const Profile = () => {
         setSaving(true);
         setSaveMsg("");
         try {
-            const res = await fetch("http://localhost:3001/api/customer/profile", {
+            const res = await fetch(`${API_URL}/api/customer/profile`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify(form),
@@ -207,8 +208,8 @@ const Profile = () => {
         try {
             const isEdit = !!editingAddrId;
             const url = isEdit
-                ? `http://localhost:3001/api/customer/address/${editingAddrId}`
-                : "http://localhost:3001/api/customer/address";
+                ? `${API_URL}/api/customer/address/${editingAddrId}`
+                : `${API_URL}/api/customer/address`;
             const res = await fetch(url, {
                 method: isEdit ? "PUT" : "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -227,7 +228,7 @@ const Profile = () => {
 
     const handleDeleteAddress = async (id) => {
         try {
-            const res = await fetch(`http://localhost:3001/api/customer/address/${id}`, {
+            const res = await fetch(`${API_URL}/api/customer/address/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });

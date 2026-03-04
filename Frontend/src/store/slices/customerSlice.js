@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import API_URL from "../../config";
 
 
 const initialState = {
@@ -17,7 +18,7 @@ const fetchCustomerData = createAsyncThunk(
 
     // If not logged in, fetch only products from public API
     if (!token) {
-      const response = await fetch("http://localhost:3001/api/products");
+      const response = await fetch(`${API_URL}/api/products`);
       const body = await response.json();
       if (response.status === 200) {
         return { products: body.products, cart: [], wishlist: [], orders: [] };
@@ -27,7 +28,7 @@ const fetchCustomerData = createAsyncThunk(
     }
 
     // If logged in, fetch full customer data
-    const response = await fetch("http://localhost:3001/api/customer/data", {
+    const response = await fetch(`${API_URL}/api/customer/data`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -45,7 +46,7 @@ export const addToCart = createAsyncThunk(
   "customer/addToCart",
   async (productId) => {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/customer/cart/${productId}`, {
+    const response = await fetch(`${API_URL}/api/customer/cart/${productId}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -65,7 +66,7 @@ export const removeFromCart = createAsyncThunk(
   "customer/removeFromCart",
   async (productId) => {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/customer/cart/${productId}`, {
+    const response = await fetch(`${API_URL}/api/customer/cart/${productId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -84,7 +85,7 @@ export const placeOrder = createAsyncThunk(
   "customer/placeOrder",
   async ({ paymentMethod, shippingAddress }, { dispatch }) => {
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:3001/api/customer/order", {
+    const response = await fetch(`${API_URL}/api/customer/order`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -106,7 +107,7 @@ export const cancelOrder = createAsyncThunk(
   "customer/cancelOrder",
   async (orderId, { dispatch }) => {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/customer/order/${orderId}`, {
+    const response = await fetch(`${API_URL}/api/customer/order/${orderId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -126,7 +127,7 @@ export const removeOrder = createAsyncThunk(
   "customer/removeOrder",
   async (orderId, { dispatch }) => {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/customer/order/${orderId}`, {
+    const response = await fetch(`${API_URL}/api/customer/order/${orderId}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -146,7 +147,7 @@ export const toggleWishlist = createAsyncThunk(
   "customer/toggleWishlist",
   async (productId) => {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/customer/wishlist/${productId}`, {
+    const response = await fetch(`${API_URL}/api/customer/wishlist/${productId}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,10 +1,11 @@
+import API_URL from "../../../config";
 const CartItems = ({ item, handleIncrease, handleDecrease }) => {
     return (
         <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-xl p-4 flex flex-wrap items-center gap-4 hover:border-indigo-500/30 transition-all duration-300">
             {/* Image */}
             <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-700/50 rounded-xl overflow-hidden flex-shrink-0">
                 <img
-                    src={`http://localhost:3001/${item.imageUrl}`}
+                    src={`${API_URL}/${item.imageUrl}`}
                     alt={item.name}
                     className="w-full h-full object-contain"
                 />

@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -32,7 +33,7 @@ const SellerLogin = () => {
 
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/auth/login/send-otp", {
+            const res = await fetch(`${API_URL}/api/auth/login/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: emailVal, password }),
@@ -64,7 +65,7 @@ const SellerLogin = () => {
 
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/auth/login/verify", {
+            const res = await fetch(`${API_URL}/api/auth/login/verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp: otp.trim() }),
@@ -94,7 +95,7 @@ const SellerLogin = () => {
         setLoading(true);
         try {
             const password = passwordRef.current?.value || "";
-            const res = await fetch("http://localhost:3001/api/auth/login/send-otp", {
+            const res = await fetch(`${API_URL}/api/auth/login/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),

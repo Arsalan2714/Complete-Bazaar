@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import API_URL from "../../config";
 import { fetchSellerProdusts } from "../../store/slices/sellerSlice";
 
 const EditProduct = () => {
@@ -59,7 +60,7 @@ const EditProduct = () => {
         }
 
         const response = await fetch(
-            `http://localhost:3001/api/seller/products/${id}`,
+            `${API_URL}/api/seller/products/${id}`,
             {
                 method: "PUT",
                 body: formData,
@@ -207,7 +208,7 @@ const EditProduct = () => {
                             <div className="mb-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                                 <p className="text-xs text-slate-400 mb-2">Current image:</p>
                                 <img
-                                    src={`http://localhost:3001/${currentImage}`}
+                                    src={`${API_URL}/${currentImage}`}
                                     alt="Current product"
                                     className="h-24 object-contain rounded"
                                 />

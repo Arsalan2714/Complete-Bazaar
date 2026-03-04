@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -113,7 +114,7 @@ const Wishlist = () => {
                                 <Link to={`/product/${item._id}`} className="flex-grow flex flex-col">
                                     <div className="relative h-52 bg-slate-700/50 overflow-hidden flex-shrink-0">
                                         <img
-                                            src={`http://localhost:3001/${item.imageUrl}`}
+                                            src={`${API_URL}/${item.imageUrl}`}
                                             alt={item.name}
                                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                                         />

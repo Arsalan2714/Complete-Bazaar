@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../../config";
 import { useSelector } from "react-redux";
 
 const AddProduct = () => {
@@ -31,7 +32,7 @@ const AddProduct = () => {
     formData.append("stock", stockRef.current.value);
     formData.append("image", imageRef.current.files[0]);
 
-    const response = await fetch("http://localhost:3001/api/seller/products", {
+    const response = await fetch(`${API_URL}/api/seller/products`, {
       method: "POST",
       body: formData,
       headers: {

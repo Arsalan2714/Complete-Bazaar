@@ -22,7 +22,7 @@ const EditModal = ({ user, adminToken, onClose, onSaved }) => {
         setSaving(true);
         setError("");
         try {
-            const res = await fetch(`http://localhost:3001/api/admin/users/${user._id}`, {
+            const res = await fetch(`${API_URL}/api/admin/users/${user._id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",

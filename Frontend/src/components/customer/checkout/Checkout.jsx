@@ -1,3 +1,4 @@
+import API_URL from "../../../config";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -52,7 +53,7 @@ const Checkout = () => {
         if (!token) return;
         const fetchAddresses = async () => {
             try {
-                const res = await fetch("http://localhost:3001/api/customer/profile", {
+                const res = await fetch(`${API_URL}/api/customer/profile`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
@@ -157,7 +158,7 @@ const Checkout = () => {
         // 1. Create Razorpay order on backend
         let rzpOrder;
         try {
-            const res = await fetch("http://localhost:3001/api/payment/create-order", {
+            const res = await fetch(`${API_URL}/api/payment/create-order`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -191,7 +192,7 @@ const Checkout = () => {
             handler: async (response) => {
                 // 3. Verify payment & save order
                 try {
-                    const verifyRes = await fetch("http://localhost:3001/api/payment/verify", {
+                    const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -408,7 +409,7 @@ const Checkout = () => {
                                 {cartItems.map((item) => (
                                     <div key={item._id} className="flex items-center gap-3">
                                         <div className="w-12 h-12 bg-slate-700/50 rounded-lg overflow-hidden flex-shrink-0">
-                                            <img src={`http://localhost:3001/${item.imageUrl}`} alt={item.name} className="w-full h-full object-contain" />
+                                            <img src={`${API_URL}/${item.imageUrl}`} alt={item.name} className="w-full h-full object-contain" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm text-slate-200 truncate">{item.name}</p>

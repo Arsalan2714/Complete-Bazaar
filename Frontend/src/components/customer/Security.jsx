@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +42,7 @@ const Security = () => {
 
         setPwLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/customer/change-password", {
+            const res = await fetch(`${API_URL}/api/customer/change-password`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
@@ -67,7 +68,7 @@ const Security = () => {
         setDeleteLoading(true);
         setDeleteMsg("");
         try {
-            const res = await fetch("http://localhost:3001/api/customer/delete-account", {
+            const res = await fetch(`${API_URL}/api/customer/delete-account`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ password: deletePassword }),

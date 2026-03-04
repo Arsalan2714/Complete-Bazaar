@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "../../config";
 import { fetchSellerProdusts, deleteProduct } from "../../store/slices/sellerSlice";
 import ErrorMessage from '../common/ErrorMessages'
 import SellerProduct from "./SellerProduct";
@@ -23,7 +24,7 @@ const SellerProducts = () => {
     };
 
     const handleDeleteProduct = async (productId) => {
-        const response = await fetch(`http://localhost:3001/api/seller/products/${productId}`, {
+        const response = await fetch(`${API_URL}/api/seller/products/${productId}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,

@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 const SellerProduct = ({ product, handleEditProduct, handleDeleteProduct }) => {
     // Star rating helper
     const renderStars = (rating) => {
@@ -23,7 +24,7 @@ const SellerProduct = ({ product, handleEditProduct, handleDeleteProduct }) => {
             {/* Product Image */}
             <div className="relative h-52 bg-slate-700/50 overflow-hidden flex-shrink-0">
                 <img
-                    src={`http://localhost:3001/${product.imageUrl}`}
+                    src={`${API_URL}/${product.imageUrl}`}
                     alt={product.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                 />

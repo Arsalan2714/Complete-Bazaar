@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -289,7 +290,7 @@ const Orders = () => {
                                                 {/* Product Image */}
                                                 <div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-700/50 rounded-lg overflow-hidden flex-shrink-0">
                                                     <img
-                                                        src={`http://localhost:3001/${product.imageUrl}`}
+                                                        src={`${API_URL}/${product.imageUrl}`}
                                                         alt={product.name}
                                                         className="w-full h-full object-contain"
                                                     />

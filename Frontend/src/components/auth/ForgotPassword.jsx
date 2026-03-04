@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -25,7 +26,7 @@ const ForgotPassword = () => {
 
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/auth/forgot-password", {
+            const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email.trim() }),
@@ -70,7 +71,7 @@ const ForgotPassword = () => {
 
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/auth/reset-password", {
+            const res = await fetch(`${API_URL}/api/auth/reset-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email.trim(), otp: otp.trim(), password }),
@@ -129,8 +130,8 @@ const ForgotPassword = () => {
                 {/* Step Indicator */}
                 <div className="flex items-center justify-center gap-3 mb-6">
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${step === 1
-                            ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                            : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                        : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                         }`}>
                         {step === 1 ? (
                             <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs">1</span>
@@ -143,8 +144,8 @@ const ForgotPassword = () => {
                     </div>
                     <div className="w-8 h-px bg-slate-600"></div>
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${step === 2
-                            ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                            : "bg-slate-700/50 text-slate-500 border border-slate-700"
+                        ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                        : "bg-slate-700/50 text-slate-500 border border-slate-700"
                         }`}>
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${step === 2 ? "bg-indigo-500 text-white" : "bg-slate-700 text-slate-500"
                             }`}>2</span>

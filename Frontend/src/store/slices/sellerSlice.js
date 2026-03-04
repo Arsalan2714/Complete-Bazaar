@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import API_URL from "../../config";
 
 
 const initialState = {
@@ -11,7 +12,7 @@ const fetchSellerProdusts = createAsyncThunk(
   "seller/fetchSellerProdusts",
   async () => {
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:3001/api/seller/products", {
+    const response = await fetch(`${API_URL}/api/seller/products`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

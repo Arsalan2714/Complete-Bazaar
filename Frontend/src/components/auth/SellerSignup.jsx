@@ -1,3 +1,4 @@
+import API_URL from "../../config";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -44,7 +45,7 @@ const SellerSignup = () => {
 
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/auth/signup/send-otp", {
+            const res = await fetch(`${API_URL}/api/auth/signup/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ firstName, lastName, email: emailVal, password, confirmPassword, userType: "seller" }),
@@ -76,7 +77,7 @@ const SellerSignup = () => {
 
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:3001/api/auth/signup/verify", {
+            const res = await fetch(`${API_URL}/api/auth/signup/verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp: otp.trim() }),
@@ -106,7 +107,7 @@ const SellerSignup = () => {
         const confirmPassword = confirmPasswordRef.current?.value || "";
 
         try {
-            const res = await fetch("http://localhost:3001/api/auth/signup/send-otp", {
+            const res = await fetch(`${API_URL}/api/auth/signup/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ firstName, lastName, email, password, confirmPassword, userType: "seller" }),
