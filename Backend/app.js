@@ -5,7 +5,7 @@ dotenv.config();
 const cors = require("cors");
 const express = require("express");
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
+const fs = require("fs");
 
 // Local modules
 const errorController = require("./controllers/errorController.js");
@@ -16,20 +16,23 @@ const { isLoggedIn, isSeller, isCustomer } = require("./middleware/auth.js");
 const paymentRouter = require("./routers/paymentRouter.js");
 const adminRouter = require("./routers/adminRouter.js");
 
+// Ensure uploads folder exists (Railway has ephemeral filesystem)
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
 const MONGO_DB_URL = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@airbnb.zr7xw53.mongodb.net/${process.env.MONGO_DB_DATABASE}`;
 
 const app = express();
 
-// Middleware
 // CORS — allow local dev and any Vercel deployment
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  /\.vercel\.app$/,          // matches any *.vercel.app domain
+  /\.vercel\.app$/,
 ];
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (e.g. Postman, mobile) or matched origins
     if (!origin) return callback(null, true);
     const allowed = allowedOrigins.some((o) =>
       typeof o === "string" ? o === origin : o.test(origin)
@@ -42,15 +45,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
-// Public routes (no auth required)
+// Public routes
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is healthy and reachable" });
+});
+
 app.get("/api/products", async (req, res) => {
   const Product = require("./models/Product.js");
   const products = await Product.find();
   res.status(200).json({ products });
-});
-
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "ok", message: "Server is healthy and reachable" });
 });
 
 app.get("/api/products/:id", async (req, res) => {
@@ -66,7 +69,6 @@ app.get("/api/products/:id", async (req, res) => {
   }
 });
 
-// Get reviews for a product (public)
 app.get("/api/reviews/:productId", async (req, res) => {
   try {
     const Review = require("./models/Review.js");
@@ -80,10 +82,8 @@ app.get("/api/reviews/:productId", async (req, res) => {
 });
 
 // Protected API routes
-app.use("/api/seller", isLoggedIn,
-  isSeller, sellerRouter);
-app.use("/api/customer", isLoggedIn,
-  isCustomer, customerRouter);
+app.use("/api/seller", isLoggedIn, isSeller, sellerRouter);
+app.use("/api/customer", isLoggedIn, isCustomer, customerRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/admin", adminRouter);
@@ -93,8 +93,18 @@ app.use(errorController.get404);
 
 const PORT = process.env.PORT || 3001;
 
-mongoose.connect(MONGO_DB_URL).then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Start server immediately so Railway doesn't kill it
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Connect to MongoDB after server starts
+mongoose.connect(MONGO_DB_URL)
+  .then(() => {
+    console.log("Connected to MongoDB successfully");
   })
-})
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
+  });
+
+module.exports = app;
