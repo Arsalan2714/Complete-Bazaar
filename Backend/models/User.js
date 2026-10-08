@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, lowercase: true, trim: true }, // removed unique: true
   password: { type: String, required: true },
   userType: { type: String, required: true, enum: ["customer", "seller"] },
   phone: { type: String, default: "" },
@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema({
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product", default: [] }],
   orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order", default: [] }],
 });
+
+// One account per email per role
+userSchema.index({ email: 1, userType: 1 }, { unique: true });
 
 const User = mongoose.model("User", userSchema);
 

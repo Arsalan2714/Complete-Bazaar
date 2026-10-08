@@ -1,9 +1,12 @@
 import API_URL from "../../config";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    // Which account is being reset: comes from the login page link (?role=seller)
+    const userType = searchParams.get("role") === "seller" ? "seller" : "customer";
     const [step, setStep] = useState(1); // 1 = email, 2 = OTP + new password
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
@@ -29,7 +32,7 @@ const ForgotPassword = () => {
             const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: email.trim() }),
+                body: JSON.stringify({ email: email.trim(), userType }),
             });
             const data = await res.json();
 
@@ -74,7 +77,7 @@ const ForgotPassword = () => {
             const res = await fetch(`${API_URL}/api/auth/reset-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: email.trim(), otp: otp.trim(), password }),
+                body: JSON.stringify({ email: email.trim(), otp: otp.trim(), password, userType }),
             });
             const data = await res.json();
 
@@ -85,7 +88,7 @@ const ForgotPassword = () => {
             }
 
             setSuccess("Password reset successfully! Redirecting to login...");
-            setTimeout(() => navigate("/login"), 2000);
+            setTimeout(() => navigate(userType === "seller" ? "/seller/login" : "/login"), 2000);
         } catch (err) {
             setError("Failed to connect to server. Please try again.");
         }
@@ -122,7 +125,7 @@ const ForgotPassword = () => {
                     </h1>
                     <p className="text-slate-400 mt-2">
                         {step === 1
-                            ? "Enter your email to receive a verification OTP"
+                            ? `Enter your email to reset your ${userType} account password`
                             : "Enter the OTP and your new password"}
                     </p>
                 </div>
@@ -317,7 +320,7 @@ const ForgotPassword = () => {
                     {/* Back to Login */}
                     <div className="text-center">
                         <Link
-                            to="/login"
+                            to={userType === "seller" ? "/seller/login" : "/login"}
                             className="text-sm text-slate-400 hover:text-indigo-400 transition-colors inline-flex items-center gap-1"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

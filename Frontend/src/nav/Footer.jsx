@@ -42,7 +42,7 @@ const Footer = () => {
                             <li><Link to="/products" className="text-slate-400 hover:text-indigo-400 text-sm transition-colors duration-200 flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-600"></span>Products</Link></li>
                             <li><Link to="/cart" className="text-slate-400 hover:text-indigo-400 text-sm transition-colors duration-200 flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-600"></span>Cart</Link></li>
                             <li><Link to="/orders" className="text-slate-400 hover:text-indigo-400 text-sm transition-colors duration-200 flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-600"></span>Orders</Link></li>
-                            <li><Link to="/seller/signup" className="text-amber-400/80 hover:text-amber-400 text-sm transition-colors duration-200 flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500/50"></span>Sell with Apna Bazaar</Link></li>
+                            <li><Link to="/seller/signup" className="text-amber-400/80 hover:text-amber-400 text-sm transition-colors duration-200 flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-500/50"></span>Sell with Complete Bazaar</Link></li>
                         </ul>
                     </div>
 

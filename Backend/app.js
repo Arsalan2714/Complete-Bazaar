@@ -16,14 +16,14 @@ const authRouter = require("./routers/authRouter.js");
 const { isLoggedIn, isSeller, isCustomer } = require("./middleware/auth.js");
 const paymentRouter = require("./routers/paymentRouter.js");
 const adminRouter = require("./routers/adminRouter.js");
+const accountRouter = require("./routers/accountRouter.js"); // profile routes shared by customers and sellers
 
 // Ensure uploads folder exists (Railway has ephemeral filesystem)
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
-const MONGO_DB_URL = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@airbnb.zr7xw53.mongodb.net/${process.env.MONGO_DB_DATABASE}`;
-
+const MONGO_DB_URL = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@complete-bazaar.vvi5vfc.mongodb.net/${process.env.MONGO_DB_DATABASE}?retryWrites=true&w=majority`;
 const app = express();
 
 // CORS — allow local dev and any Vercel deployment
@@ -42,6 +42,7 @@ app.use(cors({
   },
   credentials: true,
 }));
+//"If the frontend sends JSON data, convert it into a JavaScript object and put it inside req.body."
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
@@ -84,6 +85,9 @@ app.get("/api/reviews/:productId", async (req, res) => {
 
 // Protected API routes
 app.use("/api/seller", isLoggedIn, isSeller, sellerRouter);
+// Profile, address, change-password, delete-account: any logged-in user (customer or seller).
+// Must stay ABOVE the customer-only line below.
+app.use("/api/customer", isLoggedIn, accountRouter);
 app.use("/api/customer", isLoggedIn, isCustomer, customerRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/payment", paymentRouter);

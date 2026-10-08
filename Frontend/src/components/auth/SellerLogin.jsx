@@ -12,6 +12,7 @@ const SellerLogin = () => {
 
     const [step, setStep] = useState(1);
     const [email, setEmail] = useState("");
+    const [savedPassword, setSavedPassword] = useState(""); // kept for "Resend OTP" (the password input is unmounted in step 2)
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -36,7 +37,7 @@ const SellerLogin = () => {
             const res = await fetch(`${API_URL}/api/auth/login/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: emailVal, password }),
+                body: JSON.stringify({ email: emailVal, password, userType: "seller" }),
             });
             const data = await res.json();
             if (!res.ok) {
@@ -45,6 +46,7 @@ const SellerLogin = () => {
                 return;
             }
             setEmail(emailVal);
+            setSavedPassword(password);
             setSuccess("OTP sent to your email! Check your inbox.");
             setStep(2);
         } catch (err) {
@@ -94,11 +96,10 @@ const SellerLogin = () => {
         setSuccess("");
         setLoading(true);
         try {
-            const password = passwordRef.current?.value || "";
             const res = await fetch(`${API_URL}/api/auth/login/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, password: savedPassword, userType: "seller" }),
             });
             const data = await res.json();
             if (res.ok) {
@@ -224,7 +225,7 @@ const SellerLogin = () => {
                             <div>
                                 <div className="flex items-center justify-between mb-1.5">
                                     <label className="text-sm font-medium text-slate-300">Password</label>
-                                    <Link to="/forgot-password" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+                                    <Link to="/forgot-password?role=seller" className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
                                         Forgot password?
                                     </Link>
                                 </div>

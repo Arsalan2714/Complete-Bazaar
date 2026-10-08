@@ -1,32 +1,20 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const validator = require("validator"); // already installed as a dependency of express-validator
 const { firstNameValidator, lastNameValidator, emailValidator, passwordValidator, confirmPasswordValidator, userTypeValidator } = require("./validation");
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
-// const nodemailer = require("nodemailer");
 
 // In-memory OTP store: key -> { otp, expiresAt, data? }
 const otpStore = new Map();
 
-// Email transporter (Gmail - commented out)
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS,
-//   },
-// });
-
-// Email transporter (Brevo SMTP - commented out, blocked on Render free tier)
-// const transporter = nodemailer.createTransport({
-//   host: "smtp-relay.brevo.com",
-//   port: 587,
-//   secure: false,
-//   auth: {
-//     user: process.env.BREVO_USER,
-//     pass: process.env.BREVO_PASS,
-//   },
-// });
+// Normalize emails the same way the signup validator does (.normalizeEmail()),
+// so signup, login, forgot password and OTP lookups always use the same value.
+const normalizeEmail = (email) => {
+  if (typeof email !== "string") return "";
+  const trimmed = email.trim();
+  return validator.normalizeEmail(trimmed) || trimmed.toLowerCase();
+};
 
 // Brevo API email sender (uses HTTPS port 443 - works on Render free tier)
 const sendBrevoEmail = async (to, subject, html) => {
@@ -108,13 +96,16 @@ exports.signupSendOtp = [
       });
     }
 
-    const { firstName, lastName, email, password, userType } = req.body;
+    const { firstName, lastName, password, userType } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     try {
-      // Check if email already exists
-      const existingUser = await User.findOne({ email });
+      // Same email is allowed once per role (one customer + one seller account)
+      const existingUser = await User.findOne({ email, userType });
       if (existingUser) {
-        return res.status(409).json({ errorMessages: "An account with this email already exists" });
+        return res.status(409).json({
+          errorMessages: `A ${userType} account with this email already exists`,
+        });
       }
 
       // Generate and send OTP
@@ -138,7 +129,8 @@ exports.signupSendOtp = [
 // Step 2: Verify OTP + create account
 exports.signupVerify = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { otp } = req.body;
     const key = `signup:${email}`;
     const stored = otpStore.get(key);
 
@@ -153,8 +145,18 @@ exports.signupVerify = async (req, res) => {
       return res.status(400).json({ errorMessages: "Invalid OTP. Please try again." });
     }
 
-    // Create user
     const { firstName, lastName, password, userType } = stored.data;
+
+    // Check again right before saving
+    const existing = await User.findOne({ email, userType });
+    if (existing) {
+      otpStore.delete(key);
+      return res.status(409).json({
+        errorMessages: `A ${userType} account with this email already exists`,
+      });
+    }
+
+    // Create user
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = new User({ firstName, lastName, email, password: hashedPassword, userType });
     await user.save();
@@ -165,6 +167,9 @@ exports.signupVerify = async (req, res) => {
     res.status(201).json({ message: "Account created successfully" });
   } catch (error) {
     console.log(error);
+    if (error.code === 11000) {
+      return res.status(409).json({ errorMessages: "An account with this email and role already exists" });
+    }
     res.status(500).json({ errorMessages: "Failed to create account. Please try again." });
   }
 };
@@ -172,18 +177,38 @@ exports.signupVerify = async (req, res) => {
 // ==================== LOGIN ====================
 
 // Step 1: Validate credentials + send email OTP
+// Optional body field: userType ("customer" | "seller") to choose which account to log in to
 exports.loginSendOtp = async (req, res) => {
-  const { email, password } = req.body;
+  const email = normalizeEmail(req.body.email);
+  const { password, userType } = req.body;
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ errorMessages: "Invalid email or password" });
-    }
+    let user;
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ errorMessages: "Invalid email or password" });
+    if (userType) {
+      // Role provided (role toggle or separate login page)
+      user = await User.findOne({ email, userType });
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ errorMessages: "Invalid email or password" });
+      }
+    } else {
+      // No role provided: find the account(s) whose password matches
+      const accounts = await User.find({ email });
+      const matches = [];
+      for (const acc of accounts) {
+        if (await bcrypt.compare(password, acc.password)) matches.push(acc);
+      }
+
+      if (matches.length === 0) {
+        return res.status(401).json({ errorMessages: "Invalid email or password" });
+      }
+      if (matches.length > 1) {
+        return res.status(400).json({
+          errorMessages: "Both a customer and a seller account use these details. Please choose which one to log in to.",
+          multipleAccounts: true,
+        });
+      }
+      user = matches[0];
     }
 
     // Generate and send OTP
@@ -208,7 +233,8 @@ exports.loginSendOtp = async (req, res) => {
 // Step 2: Verify OTP + return JWT
 exports.loginVerify = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { otp } = req.body;
     const key = `login:${email}`;
     const stored = otpStore.get(key);
 
@@ -241,16 +267,26 @@ exports.loginVerify = async (req, res) => {
 
 // ==================== FORGOT PASSWORD ====================
 
+// Password reset is done per account: the same email can have a customer account and a seller
+// account, and resetting one must never change the other.
+const RESET_ROLES = ["customer", "seller"];
+const resetKey = (userType, email) => `reset:${userType}:${email}`;
+
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
+    const email = normalizeEmail(req.body.email);
+    const { userType } = req.body;
+    if (!RESET_ROLES.includes(userType)) {
+      return res.status(400).json({ errorMessages: "Please choose customer or seller" });
+    }
+
+    const user = await User.findOne({ email, userType });
     if (!user) {
-      return res.status(404).json({ errorMessages: "No account found with this email" });
+      return res.status(404).json({ errorMessages: `No ${userType} account found with this email` });
     }
 
     const otp = await generateAndSendOtp(email, user.firstName, "reset");
-    otpStore.set(`reset:${email}`, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+    otpStore.set(resetKey(userType, email), { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
     res.status(200).json({ message: "OTP sent to your email" });
   } catch (error) {
@@ -261,14 +297,19 @@ exports.forgotPassword = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
-    const stored = otpStore.get(`reset:${email}`);
+    const email = normalizeEmail(req.body.email);
+    const { otp, userType } = req.body;
+    if (!RESET_ROLES.includes(userType)) {
+      return res.status(400).json({ errorMessages: "Please choose customer or seller" });
+    }
+    const key = resetKey(userType, email);
+    const stored = otpStore.get(key);
 
     if (!stored) {
       return res.status(400).json({ errorMessages: "OTP expired or not found. Please request a new one." });
     }
     if (Date.now() > stored.expiresAt) {
-      otpStore.delete(`reset:${email}`);
+      otpStore.delete(key);
       return res.status(400).json({ errorMessages: "OTP has expired. Please request a new one." });
     }
     if (stored.otp !== otp) {
@@ -283,8 +324,12 @@ exports.verifyOtp = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, otp, password } = req.body;
-    const key = `reset:${email}`;
+    const email = normalizeEmail(req.body.email);
+    const { otp, password, userType } = req.body;
+    if (!RESET_ROLES.includes(userType)) {
+      return res.status(400).json({ errorMessages: "Please choose customer or seller" });
+    }
+    const key = resetKey(userType, email);
     const stored = otpStore.get(key);
 
     if (!stored || Date.now() > stored.expiresAt || stored.otp !== otp) {
@@ -292,7 +337,15 @@ exports.resetPassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+
+    // Only the account of THIS role is updated (never both)
+    const result = await User.updateOne(
+      { email, userType },
+      { password: hashedPassword, updatedAt: Date.now() }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ errorMessages: `No ${userType} account found with this email` });
+    }
     otpStore.delete(key);
 
     res.status(200).json({ message: "Password reset successfully" });
