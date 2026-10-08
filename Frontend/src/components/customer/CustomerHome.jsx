@@ -6,6 +6,24 @@ import { fetchCustomerData, addToCart, removeFromCart, toggleWishlist } from "..
 import ErrorMessage from '../common/ErrorMessages'
 import CustomerProduct from "./CustomerProduct";
 
+// Search helpers
+const normalize = (s) => (s || "").toLowerCase();
+const stripSpaces = (s) => normalize(s).replace(/[\s\-_.,]/g, "");
+
+// A product matches when every word typed appears somewhere in the product,
+// or when the text without spaces matches ("north east" finds "NorthEast" and vice versa).
+const matchesSearch = (product, query) => {
+    const fields = [product.name, product.brand, product.category, product.description].map(normalize);
+    const tokens = normalize(query).split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return true;
+
+    const haystack = fields.join(" ");
+    if (tokens.every((t) => haystack.includes(t))) return true;
+
+    const q = stripSpaces(query);
+    return fields.some((f) => stripSpaces(f).includes(q));
+};
+
 const CustomerHome = () => {
     const { products, cart, wishlist, isLoading, errorMessage } = useSelector(
         (state) => state.customer
@@ -38,15 +56,7 @@ const CustomerHome = () => {
         : products;
 
     const filteredProducts = searchQuery
-        ? categoryFiltered.filter((p) => {
-            const q = searchQuery.toLowerCase();
-            return (
-                p.name?.toLowerCase().includes(q) ||
-                p.description?.toLowerCase().includes(q) ||
-                p.category?.toLowerCase().includes(q) ||
-                p.brand?.toLowerCase().includes(q)
-            );
-        })
+        ? categoryFiltered.filter((p) => matchesSearch(p, searchQuery))
         : categoryFiltered;
 
     useEffect(() => {
