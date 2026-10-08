@@ -11,8 +11,6 @@ const EditProduct = () => {
     const priceRef = useRef(null);
     const categoryRef = useRef(null);
     const brandRef = useRef(null);
-    const ratingRef = useRef(null);
-    const numReviewsRef = useRef(null);
     const stockRef = useRef(null);
     const imageRef = useRef(null);
     const navigate = useNavigate();
@@ -22,6 +20,7 @@ const EditProduct = () => {
     const products = useSelector((state) => state.seller.products);
 
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const [currentImage, setCurrentImage] = useState("");
 
     // Pre-fill form with existing product data
@@ -33,8 +32,6 @@ const EditProduct = () => {
             priceRef.current.value = product.price;
             categoryRef.current.value = product.category;
             brandRef.current.value = product.brand;
-            ratingRef.current.value = product.rating;
-            numReviewsRef.current.value = product.numReviews;
             stockRef.current.value = product.stock;
             setCurrentImage(product.imageUrl);
         }
@@ -42,6 +39,7 @@ const EditProduct = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
         setLoading(true);
 
         const formData = new FormData();
@@ -50,8 +48,6 @@ const EditProduct = () => {
         formData.append("price", priceRef.current.value);
         formData.append("category", categoryRef.current.value);
         formData.append("brand", brandRef.current.value);
-        formData.append("rating", ratingRef.current.value);
-        formData.append("numReviews", numReviewsRef.current.value);
         formData.append("stock", stockRef.current.value);
 
         // Only append image if a new one was selected
@@ -74,8 +70,8 @@ const EditProduct = () => {
             await dispatch(fetchSellerProdusts());
             navigate("/");
         } else {
-            const data = await response.json();
-            console.log(data);
+            const data = await response.json().catch(() => ({}));
+            setError(data.message || "Could not update the product. Please check the details and try again.");
         }
         setLoading(false);
     };
@@ -154,12 +150,12 @@ const EditProduct = () => {
                             <label className={labelClasses}>Category</label>
                             <select ref={categoryRef} className={inputClasses}>
                                 <option value="">Select category</option>
-                                <option value="electronics">Electronics</option>
-                                <option value="clothing">Clothing</option>
-                                <option value="home">Home &amp; Kitchen</option>
-                                <option value="books">Books</option>
-                                <option value="sports">Sports</option>
-                                <option value="other">Other</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Fashion">Fashion</option>
+                                <option value="Home & Living">Home & Living</option>
+                                <option value="Books">Books</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Beauty">Beauty</option>
                             </select>
                         </div>
                         <div>
@@ -169,32 +165,6 @@ const EditProduct = () => {
                                 placeholder="0"
                                 min="0"
                                 ref={stockRef}
-                                className={inputClasses}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Row 3: Rating & Num Reviews */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className={labelClasses}>Rating</label>
-                            <input
-                                type="number"
-                                placeholder="0 - 5"
-                                min="0"
-                                max="5"
-                                step="0.1"
-                                ref={ratingRef}
-                                className={inputClasses}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Number of Reviews</label>
-                            <input
-                                type="number"
-                                placeholder="0"
-                                min="0"
-                                ref={numReviewsRef}
                                 className={inputClasses}
                             />
                         </div>
@@ -241,6 +211,12 @@ const EditProduct = () => {
                             />
                         </label>
                     </div>
+
+                    {error && (
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                            {error}
+                        </div>
+                    )}
 
                     {/* Buttons */}
                     <div className="flex gap-4">
