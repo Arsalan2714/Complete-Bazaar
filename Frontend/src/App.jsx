@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import AddProduct from "./components/seller/AddProduct";
 import EditProduct from "./components/seller/EditProduct";
 import NavBar from "./nav/NavBar";
@@ -9,7 +10,8 @@ import Login from "./components/auth/login";
 import SellerLogin from "./components/auth/SellerLogin";
 import SellerSignup from "./components/auth/SellerSignup";
 import ForgotPassword from "./components/auth/ForgotPassword";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "./store/slices/authSlice";
 import CustomerHome from "./components/customer/CustomerHome";
 import Home from "./components/customer/Home";
 import SellerHome from "./components/seller/SellerHome";
@@ -24,10 +26,48 @@ import Profile from "./components/customer/Profile";
 import Security from "./components/customer/Security";
 import ContactUs from "./components/customer/ContactUs";
 
+function SessionExpiryHandler() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { token, userType } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const expireSession = () => {
+      dispatch(logout());
+      navigate(userType === "seller" ? "/seller/login" : "/login", { replace: true });
+    };
+
+    let expiresAt;
+    try {
+      const payload = token.split(".")[1];
+      if (!payload) throw new Error("Invalid JWT");
+      const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const decoded = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")));
+      expiresAt = decoded.exp * 1000;
+    } catch {
+      expireSession();
+      return undefined;
+    }
+
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      expireSession();
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(expireSession, expiresAt - Date.now());
+    return () => window.clearTimeout(timeout);
+  }, [dispatch, navigate, token, userType]);
+
+  return null;
+}
+
 function App() {
   const { userType } = useSelector((state) => state.auth);
   return (
     <BrowserRouter>
+      <SessionExpiryHandler />
       <div className="min-h-screen bg-gray-100">
         <div>
           <NavBar />
